@@ -1,5 +1,9 @@
-{ stdenv,
-  autoreconfHook
+{ stdenv
+, autoreconfHook
+, gobject-introspection
+, file
+, intltool
+, glib
 }:
 
 stdenv.mkDerivation {
@@ -10,5 +14,16 @@ stdenv.mkDerivation {
 
   nativeBuildInputs = [
     autoreconfHook
+    file
+    intltool
   ];
+
+  buildInputs = [
+    gobject-introspection
+    glib
+  ];
+
+  autoreconfPhase = ''
+    ./autogen.sh
+  '';
 }
