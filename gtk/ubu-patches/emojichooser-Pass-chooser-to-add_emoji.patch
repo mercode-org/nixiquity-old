@@ -1,0 +1,26 @@
+From: =?utf-8?q?Timm_B=C3=A4der?= <mail@baedert.org>
+Date: Thu, 11 Oct 2018 12:27:17 +0200
+Subject: emojichooser: Pass chooser to add_emoji
+
+https://gitlab.gnome.org/GNOME/gtk/issues/1398
+(cherry picked from commit dbbc7b3859f4b5d504cc12a54b2eba40e040c7e8)
+---
+ gtk/gtkemojichooser.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gtk/gtkemojichooser.c b/gtk/gtkemojichooser.c
+index b423f80..6efb056 100644
+--- a/gtk/gtkemojichooser.c
++++ b/gtk/gtkemojichooser.c
+@@ -302,9 +302,9 @@ show_variations (GtkEmojiChooser *chooser,
+ 
+   g_signal_connect (box, "child-activated", G_CALLBACK (emoji_activated), parent_popover);
+ 
+-  add_emoji (box, FALSE, emoji_data, 0, NULL);
++  add_emoji (box, FALSE, emoji_data, 0, chooser);
+   for (modifier = 0x1f3fb; modifier <= 0x1f3ff; modifier++)
+-    add_emoji (box, FALSE, emoji_data, modifier, NULL);
++    add_emoji (box, FALSE, emoji_data, modifier, chooser);
+ 
+   gtk_widget_show_all (view);
+   gtk_popover_popup (GTK_POPOVER (popover));

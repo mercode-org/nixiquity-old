@@ -1,0 +1,37 @@
+From: marmuta <marmvta@gmail.com>
+Date: Sun, 12 Jun 2016 15:42:01 +0200
+Subject: Unscale plug size before sending XConfigureEvent
+
+https://bugzilla.gnome.org/show_bug.cgi?id=765327
+
+Bug-Ubuntu: https://launchpad.net/bugs/1572331
+---
+ gtk/gtksocket.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+--- a/gtk/gtksocket.c
++++ b/gtk/gtksocket.c
+@@ -574,6 +574,7 @@ gtk_socket_send_configure_event (GtkSock
+   XConfigureEvent xconfigure;
+   GdkDisplay *display;
+   gint x, y;
++  gint scale;
+ 
+   g_return_if_fail (socket->priv->plug_window != NULL);
+ 
+@@ -593,10 +594,11 @@ gtk_socket_send_configure_event (GtkSock
+   gdk_x11_display_error_trap_pop_ignored (display);
+ 
+   gtk_widget_get_allocation (GTK_WIDGET(socket), &allocation);
+-  xconfigure.x = x;
+-  xconfigure.y = y;
+-  xconfigure.width = allocation.width;
+-  xconfigure.height = allocation.height;
++  scale = gtk_widget_get_scale_factor (GTK_WIDGET(socket));
++  xconfigure.x = x * scale;
++  xconfigure.y = y * scale;
++  xconfigure.width = allocation.width * scale;
++  xconfigure.height = allocation.height * scale;
+ 
+   xconfigure.border_width = 0;
+   xconfigure.above = None;

@@ -1,0 +1,23 @@
+From: Luca Bacci <luca.bacci982@gmail.com>
+Date: Tue, 28 Aug 2018 18:39:05 +0200
+Subject: Check for NULL priv->popup_window in gtk_combo_box_popdown()
+
+Fixes issue #125
+---
+ gtk/gtkcombobox.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/gtk/gtkcombobox.c b/gtk/gtkcombobox.c
+index cf01278..e6589b4 100644
+--- a/gtk/gtkcombobox.c
++++ b/gtk/gtkcombobox.c
+@@ -2429,6 +2429,9 @@ gtk_combo_box_popdown (GtkComboBox *combo_box)
+   if (!gtk_widget_get_realized (GTK_WIDGET (combo_box)))
+     return;
+ 
++  if (!priv->popup_window)
++    return;
++
+   if (!gtk_widget_is_drawable (priv->popup_window))
+     return;
+ 
