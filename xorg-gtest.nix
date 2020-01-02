@@ -24,10 +24,10 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     pkgconfig
     autoreconfHook
-    xorg.utilmacros
   ];
 
   propagatedBuildInputs = [
+    xorg.utilmacros
     evemu
     gtest
   ];

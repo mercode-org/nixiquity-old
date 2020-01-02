@@ -8,16 +8,17 @@
 , gobject-introspection
 , xorg-gtest
 , vala
+, gnome2
 }:
 
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
   pname = "libido";
-  version = "12.10.2";
+  version = "0.4.90";
 
   src = fetchFromGitHub {
     repo = "ayatana-ido";
     owner = "AyatanaIndicators";
-    rev = "0.4.90";
+    rev = version;
     sha256 = "02vqjryni96zzrpkq5d7kvgw7nf252d2fm2xq8fklvvb2vz3fa0w";
   };
 
@@ -25,6 +26,7 @@ stdenv.mkDerivation {
     pkgconfig
     autoreconfHook
     xorg-gtest
+    gnome2.gtkdoc
   ];
 
   buildInputs = [
