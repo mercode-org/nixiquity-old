@@ -1,27 +1,37 @@
 { stdenv
-, fetchurl
+, autoreconfHook
+, fetchFromGitHub
 , pkgconfig
 , gtk3
 , glib
 , file
+, gobject-introspection
+, xorg-gtest
+, vala
 }:
 
 stdenv.mkDerivation {
   pname = "libido";
   version = "12.10.2";
 
-  src = fetchurl {
-    url = "https://launchpad.net/ido/12.10/12.10.2/+download/ido-12.10.2.tar.gz";
-    sha256 = "000zyyhm8wcww5r5xx2qqwldw9wk23gihx7qx8wf1cpf1ry9q9z2";
+  src = fetchFromGitHub {
+    repo = "ayatana-ido";
+    owner = "AyatanaIndicators";
+    rev = "0.4.90";
+    sha256 = "02vqjryni96zzrpkq5d7kvgw7nf252d2fm2xq8fklvvb2vz3fa0w";
   };
 
   nativeBuildInputs = [
     pkgconfig
+    autoreconfHook
+    xorg-gtest
   ];
 
   buildInputs = [
     gtk3
     glib
+    gobject-introspection
+    vala
   ];
 
   configureFlags = [

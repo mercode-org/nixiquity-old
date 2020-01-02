@@ -1,49 +1,48 @@
 { stdenv
-, fetchFromGitHub
-, lib
-, file
+, fetchgit
 , pkgconfig
 , autoreconfHook
-, libido
-, gtk3
+, file
+, lib
+, xorg
+, evemu
+, gtest
 }:
 
 with lib;
 
 stdenv.mkDerivation rec {
-  pname = "libayatana-indicator";
-  version = "0.6.3";
+  pname = "xorg-gtest";
+  version = "0.7.1-unstable";
 
-  src = fetchFromGitHub {
-    repo = "libayatana-indicator";
-    owner = "AyatanaIndicators";
-    rev = version;
-    sha256 = "1q9wmaw6pckwyrv0s7wkqzm1yrk031pbz4xbr8cwn75ixqyfcb28";
+  src = fetchgit {
+    url = "https://gitlab.freedesktop.org/xorg/test/xorg-gtest.git";
+    rev = "b421e56afcff07b1e36009a4e18cd238707debf3";
+    sha256 = "0yhywyl8ywb7qhs61zkbjyf9cnfywiycvzrk271acdxd3svqmalg";
   };
 
   nativeBuildInputs = [
     pkgconfig
     autoreconfHook
+    xorg.utilmacros
+  ];
+
+  propagatedBuildInputs = [
+    evemu
+    gtest
   ];
 
   buildInputs = [
-    gtk3
-    libido
+    xorg.libX11
+    xorg.libXi
+    xorg.libXext
   ];
-
-  preConfigure = ''
-    substituteInPlace configure \
-      --replace 'LIBINDICATOR_LIBS+="$LIBM"' 'LIBINDICATOR_LIBS+=" $LIBM"'
-    for f in {build-aux/ltmain.sh,configure,m4/libtool.m4}; do
-      substituteInPlace $f\
-        --replace /usr/bin/file ${file}/bin/file
-    done
-  '';
 
   configureFlags = [
     "CFLAGS=-Wno-error"
     "--sysconfdir=/etc"
     "--localstatedir=/var"
+    "enable_integration_tests=no"
   ];
 
   installFlags = [
