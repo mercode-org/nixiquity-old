@@ -1,5 +1,5 @@
 { stdenv
-, fetchFromGitHub
+, fetchbzr
 , lib
 , file
 , pkgconfig
@@ -11,14 +11,13 @@
 with lib;
 
 stdenv.mkDerivation rec {
-  pname = "libayatana-indicator";
+  pname = "libindicator";
   version = "0.6.3";
 
-  src = fetchFromGitHub {
-    repo = "libayatana-indicator";
-    owner = "AyatanaIndicators";
-    rev = version;
-    sha256 = "1q9wmaw6pckwyrv0s7wkqzm1yrk031pbz4xbr8cwn75ixqyfcb28";
+  src = fetchbzr {
+    url = "lp:libindicator";
+    rev = "539";
+    sha256 = "1m9b3jsi3afvv6w8vqfiwlz2w54g5j32imf5igpkam916y4fc6bb";
   };
 
   nativeBuildInputs = [

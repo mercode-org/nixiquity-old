@@ -1,6 +1,6 @@
 { stdenv
 , autoreconfHook
-, fetchFromGitHub
+, fetchbzr
 , pkgconfig
 , gtk3
 , glib
@@ -15,11 +15,10 @@ stdenv.mkDerivation rec {
   pname = "libido";
   version = "0.4.90";
 
-  src = fetchFromGitHub {
-    repo = "ayatana-ido";
-    owner = "AyatanaIndicators";
-    rev = version;
-    sha256 = "02vqjryni96zzrpkq5d7kvgw7nf252d2fm2xq8fklvvb2vz3fa0w";
+  src = fetchbzr {
+    url = "lp:ido";
+    rev = "198";
+    sha256 = "1z5sj3vlmk98rkjfxh7riaa64lr3wpj3ighcgpc38aq2c64maan9";
   };
 
   nativeBuildInputs = [
