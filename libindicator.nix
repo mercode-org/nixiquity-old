@@ -1,25 +1,33 @@
-{ stdenv, fetchurl, lib, file
-, pkgconfig
-, gtkVersion ? "3", gtk2 ? null, gtk3 ? null }:
+{ stdenv, fetchbzr, lib, file
+, pkgconfig, autoreconfHook, libido
+, gtk3 }:
 
 with lib;
 
 stdenv.mkDerivation rec {
-  name = "libindicator-gtk${gtkVersion}-${version}";
+  name = "libindicator-${version}";
   version = "${versionMajor}.${versionMinor}";
   versionMajor = "12.10";
-  versionMinor = "1";
+  versionMinor = "2";
 
-  src = fetchurl {
-    url = "${meta.homepage}/${versionMajor}/${version}/+download/libindicator-${version}.tar.gz";
-    sha256 = "b2d2e44c10313d5c9cd60db455d520f80b36dc39562df079a3f29495e8f9447f";
+  src = fetchbzr {
+    url = "lp:libindicator";
+    rev = "539";
+    # nix-prefetch-bzr lp:libindicator
+    sha256 = "1m9b3jsi3afvv6w8vqfiwlz2w54g5j32imf5igpkam916y4fc6bb";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
+  nativeBuildInputs = [
+    pkgconfig
+    autoreconfHook
+  ];
 
-  buildInputs = [ (if gtkVersion == "2" then gtk2 else gtk3) ];
+  buildInputs = [
+    gtk3
+    libido
+  ];
 
-  postPatch = ''
+  preConfigure = ''
     substituteInPlace configure \
       --replace 'LIBINDICATOR_LIBS+="$LIBM"' 'LIBINDICATOR_LIBS+=" $LIBM"'
     for f in {build-aux/ltmain.sh,configure,m4/libtool.m4}; do
@@ -32,7 +40,6 @@ stdenv.mkDerivation rec {
     "CFLAGS=-Wno-error"
     "--sysconfdir=/etc"
     "--localstatedir=/var"
-    "--with-gtk=${gtkVersion}"
   ];
 
   installFlags = [
