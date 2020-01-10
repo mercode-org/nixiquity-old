@@ -26,7 +26,7 @@ stdenv.mkDerivation {
   pname = "nixiquity";
   version = "0.0.0";
 
-  src = ./.;
+  src = ./..;
 
   nativeBuildInputs = [
     autoreconfHook
@@ -38,6 +38,7 @@ stdenv.mkDerivation {
   ];
 
   buildInputs = [
+    gtk3
     gobject-introspection
     glib
     libsoup
@@ -45,7 +46,6 @@ stdenv.mkDerivation {
     gnome3.webkitgtk
     kdeFrameworks.kdewebkit
     cairo
-    gtk3
     iw
     isocodes
     parted
