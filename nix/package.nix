@@ -8,6 +8,7 @@
 , libsoup
 , networkmanager
 , gnome3
+, gtk3
 , kdeFrameworks
 , isocodes
 , cairo
@@ -44,7 +45,7 @@ stdenv.mkDerivation {
     gnome3.webkitgtk
     kdeFrameworks.kdewebkit
     cairo
-    gnome3.gtk3
+    gtk3
     iw
     isocodes
     parted
