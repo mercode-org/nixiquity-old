@@ -1,0 +1,21 @@
+diff --git a/gtk/meson.build b/gtk/meson.build
+index 573b654..220eb32 100644
+--- a/gtk/meson.build
++++ b/gtk/meson.build
+@@ -17,6 +17,7 @@ gtk_cargs = [
+ 
+ # List of sources to build the library from
+ gtk_sources = files(
++  'ubuntumenuitemfactory.c',
+   'gtkactionmuxer.c',
+   'gtkactionobserver.c',
+   'gtkactionobservable.c',
+@@ -395,6 +396,8 @@ gtk_private_type_headers = files(
+ gtk_gir_public_headers = files(
+   'gtk.h',
+   'gtk-autocleanups.h',
++  'ubuntu-private.h',
++  'ubuntumenuitemfactory.h',
+   'gtkx-autocleanups.h',
+   'gtk-a11y.h',
+   'gtkaboutdialog.h',

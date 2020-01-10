@@ -80,7 +80,7 @@ stdenv.mkDerivation rec {
     ./ubu-patches/060_ignore-random-icons.patch
     ./ubu-patches/no-accessibility-dump.patch
     ./ubu-patches/reftest-known-fail.patch
-    ./ubu-patches/gdk-x11-Check-if-we-have-access-to-GL-before-using-G.patch
+    # ./ubu-patches/gdk-x11-Check-if-we-have-access-to-GL-before-using-G.patch
     #./ubu-patches/Force-emoji-presentation.patch
     #./ubu-patches/emojichooser-Pass-chooser-to-add_emoji.patch
 
@@ -101,6 +101,8 @@ stdenv.mkDerivation rec {
     #./ubu-patches/gtksocket-unscale-before-sending-configurenotify.patch
     #./ubu-patches/Check-for-NULL-priv-popup_window-in-gtk_combo_box_popdown.patch
     #./ubu-patches/print-dialog-cups-check-unknown-option-values-whether-they-are-actually-custom-settings.patch
+
+    ./headers-meson.patch
   ] ++ optionals stdenv.isDarwin [
     # X11 module requires <gio/gdesktopappinfo.h> which is not installed on Darwin
     # let’s drop that dependency in similar way to how other parts of the library do it
