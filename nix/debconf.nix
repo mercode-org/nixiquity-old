@@ -3,6 +3,7 @@
 , perl
 , gettext
 , perlPackages
+, makeWrapper
 }:
 
 stdenv.mkDerivation rec {
@@ -16,19 +17,27 @@ stdenv.mkDerivation rec {
   };
 
   nativeBuildInputs = [
-    perl
     gettext
     perlPackages.Po4a
+    makeWrapper
+  ];
+
+  buildInputs = [
+    perl
   ];
 
   patchPhase = ''
     patchShebangs doc/graph.pl
   '';
 
-  preDistPhases = ["moveFiles"];
+  preFixupPhases = ["moveFiles" "patchBins"];
 
   moveFiles = ''
     mv $out/usr/* $out
+  '';
+
+  patchBins = ''
+    sed "s|perl -w|perl -w -I$out|g" -i $out/bin/*
   '';
 
   installFlags = ["prefix=$(out)"];

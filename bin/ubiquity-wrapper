@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/python3
 
 # Wrapper script to run Ubiquity as root using the appropriate privilege
 # escalation method for the frontend.
