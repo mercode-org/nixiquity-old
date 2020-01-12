@@ -26,6 +26,7 @@
 , callPackage
 , wrapGAppsHook
 , pam
+, python-pam
 , lsb-release
 
 , frontendGtk ? true
@@ -49,6 +50,7 @@ stdenv.mkDerivation {
       pygobject3
       dbus-python
       PyICU
+      python-pam
     ]))
 
     autoreconfHook
@@ -67,6 +69,7 @@ stdenv.mkDerivation {
       pygobject3
       dbus-python
       PyICU
+      python-pam
     ]))
 
     pam
