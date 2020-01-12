@@ -24,9 +24,10 @@
 , debconf
 , makeWrapper
 , callPackage
+, wrapGAppsHook
 
 , frontendGtk ? true
-, frontendKde ? true
+, frontendKde ? false
 , slideshowPackage ? (callPackage ./slideshow-empty.nix { })
 , oemSlideshowPackage ? (callPackage ./slideshow-empty.nix { })
 }:
@@ -42,17 +43,27 @@ stdenv.mkDerivation {
   src = ./..;
 
   nativeBuildInputs = [
+    (python3.withPackages (ps: with ps; [
+      pygobject3
+      dbus-python
+    ]))
+
     autoreconfHook
     file
     intltool
     pkgconfig
     gettext
     subunit
+
     makeWrapper
+    wrapGAppsHook
   ];
 
   buildInputs = [
-    ( python3.withPackages ( ps: with ps; [ pygobject3 dbus-python gettext ] ) )
+    (python3.withPackages (ps: with ps; [
+      pygobject3
+      dbus-python
+    ]))
 
     gtk3
     gobject-introspection
@@ -104,6 +115,7 @@ stdenv.mkDerivation {
   patchBins = ''
     for b in $out/bin/ubiquity $out/bin/ubiquity-dm  $out/lib/ubiquity/bin/ubiquity; do
       patchShebangs $b
+      wrapGApp $b
       wrapProgram $b \
         --prefix PYTHONPATH : "${debconf}/lib/python3/dist-packages"
     done
