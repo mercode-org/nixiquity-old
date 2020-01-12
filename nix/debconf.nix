@@ -37,7 +37,7 @@ stdenv.mkDerivation rec {
   '';
 
   patchBins = ''
-    sed "s|perl -w|perl -w -I$out|g" -i $out/bin/*
+    sed "s|perl|perl -I$out|g" -i $out/bin/*
   '';
 
   installFlags = ["prefix=$(out)"];
