@@ -250,7 +250,8 @@ def install(frontend=None, query=False):
     for f in frontends:
         try:
             ui = importlib.import_module('ubiquity.frontend.%s' % f)
-        except ImportError:
+        except ImportError as e:
+            print(e)
             continue
         chosen = f
         # Noninteractive implies automatic mode.
