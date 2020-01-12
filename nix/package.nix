@@ -25,6 +25,8 @@
 , makeWrapper
 , callPackage
 , wrapGAppsHook
+, pam
+, lsb-release
 
 , frontendGtk ? true
 , frontendKde ? false
@@ -46,6 +48,7 @@ stdenv.mkDerivation {
     (python3.withPackages (ps: with ps; [
       pygobject3
       dbus-python
+      PyICU
     ]))
 
     autoreconfHook
@@ -63,8 +66,10 @@ stdenv.mkDerivation {
     (python3.withPackages (ps: with ps; [
       pygobject3
       dbus-python
+      PyICU
     ]))
 
+    pam
     gtk3
     gobject-introspection
     glib
@@ -98,6 +103,7 @@ stdenv.mkDerivation {
     sed "s|/usr/share/xml/iso-codes|${isocodes}/xml/iso-codes|g" -i ./ubiquity/tz.py
     sed "s|/usr/share/zoneinfo|${tzdata}/share/zoneinfo|g" -i ./ubiquity/tz.py
     sed "s|/usr/share/console-setup|${console-setup-linux}/share/console-setup|g" -i ./ubiquity/keyboard_detector.py
+    sed "s|lsb_release|${lsb-release}/bin/lsb_release|g" -i ./bin/ubiquity
 
     find . -type f -exec sed -i \
       -e s,/usr/share/ubiquity-slideshow,${slideshowPackage},g \
