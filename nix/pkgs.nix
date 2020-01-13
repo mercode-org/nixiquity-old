@@ -8,7 +8,13 @@ rec {
   debconf = callPackage ./debconf.nix { };
   console-setup-linux = callPackage ./console-setup-linux.nix { };
   python-pam = python3Packages.callPackage ./python-pam.nix { };
-  timezonemap = callPackage ./timezonemap.nix { };
+  timezonemap = callPackage ./timezonemap.nix {
+    inherit gtk3;
+  };
+  libdebian-installer = callPackage ./libdebian-installer.nix { };
+  debian-installer-utils = callPackage ./debian-installer-utils.nix {
+    inherit libdebian-installer;
+  };
   libido = callPackage ./libido.nix {
     inherit xorg-gtest gtk3;
   };
@@ -16,6 +22,6 @@ rec {
     inherit libido gtk3;
   };
   nixiquity = callPackage ./package.nix {
-    inherit libindicator console-setup-linux debconf python-pam timezonemap gtk3;
+    inherit libindicator console-setup-linux debconf python-pam timezonemap debian-installer-utils gtk3;
   };
 }

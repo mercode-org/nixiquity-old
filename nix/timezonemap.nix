@@ -15,7 +15,7 @@ stdenv.mkDerivation rec {
   version = "0.4.5";
 
   src = fetchbzr {
-    url = "lp:ido";
+    url = "lp:timezonemap";
     rev = "58";
     sha256 = "1qdp5f9zd8c02bf0mq4w15rlhz2g51phml5qg9asdyfd1715f8n0";
   };

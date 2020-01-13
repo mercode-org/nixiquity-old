@@ -32,6 +32,9 @@
 , networkmanagerapplet
 , timezonemap
 , json_glib
+, vte
+, busybox
+, debian-installer-utils
 
 , frontendGtk ? true
 , frontendKde ? false
@@ -96,6 +99,7 @@ stdenv.mkDerivation {
     debconf
     timezonemap
     json_glib
+    vte
   ];
 
   /* makeFlags = [ "PREFIX=$(out)" ];
@@ -121,7 +125,10 @@ stdenv.mkDerivation {
       -e s,/usr/share/oem-config-slideshow,${oemSlideshowPackage},g \
       -e s,/usr/lib/ubiquity,$out/lib/ubiquity,g \
       -e s,/usr/share/ubiquity,$out/share/ubiquity,g \
+      -e s,/usr/share/libtimezonemap,${timezonemap}/share,g \
+      -e s,/bin/busybox,${busybox}/bin/busybox,g \
       -e s,debconf-communicate,${debconf}/bin/debconf-communicate,g \
+      -e s,debconf-copydb,${debconf}/bin/debconf-copydb,g \
       -e s,/usr/share/locale,/run/current-system/sw/share/locale,g \
       -e s,/usr/share/icons,/run/current-system/sw/share/icons,g \
       {} +
@@ -134,7 +141,8 @@ stdenv.mkDerivation {
       patchShebangs $b
       wrapGApp $b
       wrapProgram $b \
-        --prefix PYTHONPATH : "${debconf}/lib/python3/dist-packages"
+        --prefix PYTHONPATH : "${debconf}/lib/python3/dist-packages" \
+        --prefix PATH : "${debian-installer-utils}/bin"
     done
   '';
 
