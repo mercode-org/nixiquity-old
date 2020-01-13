@@ -647,7 +647,7 @@ class Page(plugin.Plugin):
     def prepare(self, unfiltered=False):
         self.language_question = None
         self.initial_language = None
-        self.db.fset('localechooser/languagelist', 'seen', 'false')
+        # self.db.fset('localechooser/languagelist', 'seen', 'false')
         with misc.raised_privileges():
             osextras.unlink_force('/var/lib/localechooser/preseeded')
             osextras.unlink_force('/var/lib/localechooser/langlevel')
