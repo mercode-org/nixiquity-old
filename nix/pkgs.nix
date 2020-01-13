@@ -8,6 +8,7 @@ rec {
   debconf = callPackage ./debconf.nix { };
   console-setup-linux = callPackage ./console-setup-linux.nix { };
   python-pam = python3Packages.callPackage ./python-pam.nix { };
+  timezonemap = callPackage ./timezonemap.nix { };
   libido = callPackage ./libido.nix {
     inherit xorg-gtest gtk3;
   };
@@ -15,6 +16,6 @@ rec {
     inherit libido gtk3;
   };
   nixiquity = callPackage ./package.nix {
-    inherit libindicator console-setup-linux debconf python-pam gtk3;
+    inherit libindicator console-setup-linux debconf python-pam timezonemap gtk3;
   };
 }

@@ -28,6 +28,10 @@
 , pam
 , python-pam
 , lsb-release
+, imagemagick
+, networkmanagerapplet
+, timezonemap
+, json_glib
 
 , frontendGtk ? true
 , frontendKde ? false
@@ -59,6 +63,7 @@ stdenv.mkDerivation {
     pkgconfig
     gettext
     subunit
+    imagemagick
 
     makeWrapper
     wrapGAppsHook
@@ -78,6 +83,7 @@ stdenv.mkDerivation {
     glib
     libsoup
     networkmanager
+    networkmanagerapplet # libnma
     gnome3.webkitgtk
     kdeFrameworks.kdewebkit
     cairo
@@ -88,6 +94,8 @@ stdenv.mkDerivation {
     libindicator
     console-setup-linux
     debconf
+    timezonemap
+    json_glib
   ];
 
   /* makeFlags = [ "PREFIX=$(out)" ];
@@ -102,8 +110,8 @@ stdenv.mkDerivation {
   '';
 
   patchPhase = ''
-    sed "s|/usr/share/xml/iso-codes|${isocodes}/xml/iso-codes|g" -i ./ubiquity/misc.py
-    sed "s|/usr/share/xml/iso-codes|${isocodes}/xml/iso-codes|g" -i ./ubiquity/tz.py
+    sed "s|/usr/share/xml/iso-codes|${isocodes}/share/xml/iso-codes|g" -i ./ubiquity/misc.py
+    sed "s|/usr/share/xml/iso-codes|${isocodes}/share/xml/iso-codes|g" -i ./ubiquity/tz.py
     sed "s|/usr/share/zoneinfo|${tzdata}/share/zoneinfo|g" -i ./ubiquity/tz.py
     sed "s|/usr/share/console-setup|${console-setup-linux}/share/console-setup|g" -i ./ubiquity/keyboard_detector.py
     sed "s|lsb_release|${lsb-release}/bin/lsb_release|g" -i ./bin/ubiquity
@@ -133,6 +141,8 @@ stdenv.mkDerivation {
   # TODO: gradualy figure out what this script does and remove or enable parts of it (from debian/rules "install-stamp")
 
   debianInstall = ''
+    convert -resize 32x32 data/ubiquity.svg pixmaps/ubiquity.xpm
+
     processInstallLine() {
       local files
       files=()
@@ -168,16 +178,19 @@ stdenv.mkDerivation {
 
     processInstall debian/ubiquity.install-any
 
-    set -x
+    # set -x
 
     if ${b frontendGtk}; then
-      processInstallLine ubiquity/frontend/gtk_ui.py usr/lib/ubiquity/ubiquity/frontend
-      processInstallLine ubiquity/frontend/gtk_components/* usr/lib/ubiquity/ubiquity/frontend/gtk_components
+      processInstall debian/ubiquity-frontend-gtk.install
+      # processInstallLine ubiquity/frontend/gtk_ui.py usr/lib/ubiquity/ubiquity/frontend
+      # processInstallLine ubiquity/frontend/gtk_components/* usr/lib/ubiquity/ubiquity/frontend/gtk_components
+      # processInstallLine gui/gtk/* usr/share/ubiquity/gtk
     fi
 
     if ${b frontendKde}; then
       processInstallLine ubiquity/frontend/kde_ui.py usr/lib/ubiquity/ubiquity/frontend
       processInstallLine ubiquity/frontend/kde_components/* usr/lib/ubiquity/ubiquity/frontend/kde_components
+      processInstallLine gui/qt/* usr/share/ubiquity/qt
     fi
 
     set +x
