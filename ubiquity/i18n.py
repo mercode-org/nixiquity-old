@@ -26,13 +26,18 @@ import os
 import re
 import subprocess
 import sys
+import debconf
 
 from ubiquity import im_switch, misc
 
 
 def reset_locale(frontend):
     frontend.start_debconf()
-    di_locale = frontend.db.get('debian-installer/locale')
+    di_locale = False
+    try:
+        frontend.db.get('debian-installer/locale')
+    except debconf.DebconfError:
+        di_locale = False
     if not di_locale:
         # TODO cjwatson 2006-07-17: maybe fetch
         # languagechooser/language-name and set a language based on

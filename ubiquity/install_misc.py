@@ -35,10 +35,6 @@ import sys
 import syslog
 import traceback
 
-from apt.cache import Cache
-from apt.progress.base import InstallProgress
-from apt.progress.text import AcquireProgress
-import apt_pkg
 import debconf
 
 from ubiquity import misc, osextras
@@ -255,194 +251,194 @@ def query_recorded_removed():
     return (apt_removed, apt_removed_recursive)
 
 
-class DebconfAcquireProgress(AcquireProgress):
-    """An object that reports apt's fetching progress using debconf."""
-
-    def __init__(self, db, title, info_starting, info):
-        AcquireProgress.__init__(self)
-        self.db = db
-        self.title = title
-        self.info_starting = info_starting
-        self.info = info
-        self.old_capb = None
-        self.eta = 0.0
-
-    def start(self):
-        if os.environ['UBIQUITY_FRONTEND'] != 'debconf_ui':
-            self.db.progress('START', 0, 100, self.title)
-        if self.info_starting is not None:
-            self.db.progress('INFO', self.info_starting)
-        self.old_capb = self.db.capb()
-        capb_list = self.old_capb.split()
-        capb_list.append('progresscancel')
-        self.db.capb(' '.join(capb_list))
-
-    # TODO cjwatson 2006-02-27: implement updateStatus
-
-    def pulse(self, owner=None):
-        AcquireProgress.pulse(self, owner)
-        self.percent = (((self.current_bytes + self.current_items) * 100.0) /
-                        float(self.total_bytes + self.total_items))
-        if self.current_cps > 0:
-            self.eta = ((self.total_bytes - self.current_bytes) /
-                        float(self.current_cps))
-
-        try:
-            if os.environ['UBIQUITY_FRONTEND'] != 'debconf_ui':
-                self.db.progress('SET', int(self.percent))
-        except debconf.DebconfError:
-            return False
-        if self.eta != 0.0:
-            time_str = "%d:%02d" % divmod(int(self.eta), 60)
-            self.db.subst(self.info, 'TIME', time_str)
-            try:
-                self.db.progress('INFO', self.info)
-            except debconf.DebconfError:
-                return False
-        return True
-
-    def stop(self):
-        if self.old_capb is not None:
-            self.db.capb(self.old_capb)
-            self.old_capb = None
-            if os.environ['UBIQUITY_FRONTEND'] != 'debconf_ui':
-                self.db.progress('STOP')
-
-
-class DebconfInstallProgress(InstallProgress):
-    """An object that reports apt's installation progress using debconf."""
-
-    def __init__(self, db, title, info, error=None):
-        InstallProgress.__init__(self)
-        self.db = db
-        self.title = title
-        self.info = info
-        self.error_template = error
-        self.started = False
-        # InstallProgress uses a non-blocking status fd; our run()
-        # implementation doesn't need that, and in fact we spin unless the
-        # fd is blocking.
-        flags = fcntl.fcntl(self.status_stream.fileno(), fcntl.F_GETFL)
-        fcntl.fcntl(self.status_stream.fileno(), fcntl.F_SETFL,
-                    flags & ~os.O_NONBLOCK)
-
-    def start_update(self):
-        if os.environ['UBIQUITY_FRONTEND'] != 'debconf_ui':
-            self.db.progress('START', 0, 100, self.title)
-        self.started = True
-
-    def error(self, pkg, errormsg):
-        if self.error_template is not None:
-            self.db.subst(self.error_template, 'PACKAGE', pkg)
-            self.db.subst(self.error_template, 'MESSAGE', errormsg)
-            self.db.input('critical', self.error_template)
-            self.db.go()
-
-    def status_change(self, dummypkg, percent, status):
-        self.percent = percent
-        self.status = status
-        if os.environ['UBIQUITY_FRONTEND'] != 'debconf_ui':
-            self.db.progress('SET', int(percent))
-        self.db.subst(self.info, 'DESCRIPTION', status)
-        self.db.progress('INFO', self.info)
-
-    def run(self, pm):
-        # Create a subprocess to deal with turning apt status messages into
-        # debconf protocol messages.
-        control_read, control_write = os.pipe()
-        child_pid = self.fork()
-        if child_pid == 0:
-            # child
-            self.write_stream.close()
-            os.close(control_write)
-            try:
-                while True:
-                    try:
-                        rlist, _, _ = select.select(
-                            [self.status_stream, control_read], [], [])
-                    except select.error as error:
-                        if error[0] != errno.EINTR:
-                            raise
-                    if self.status_stream in rlist:
-                        self.update_interface()
-                    if control_read in rlist:
-                        os._exit(0)
-            except (KeyboardInterrupt, SystemExit):
-                pass  # we're going to exit anyway
-            except Exception:
-                for line in traceback.format_exc().split('\n'):
-                    syslog.syslog(syslog.LOG_WARNING, line)
-            os._exit(0)
-
-        self.status_stream.close()
-        os.close(control_read)
-
-        # Redirect stdin from /dev/null and stdout to stderr to avoid them
-        # interfering with our debconf protocol stream.
-        saved_stdin = os.dup(0)
-        try:
-            null = os.open('/dev/null', os.O_RDONLY)
-            os.dup2(null, 0)
-            os.close(null)
-        except OSError:
-            pass
-        saved_stdout = os.dup(1)
-        os.dup2(2, 1)
-
-        # Make sure all packages are installed non-interactively. We
-        # don't have enough passthrough magic here to deal with any
-        # debconf questions they might ask.
-        saved_environ_keys = ('DEBIAN_FRONTEND', 'DEBIAN_HAS_FRONTEND',
-                              'DEBCONF_USE_CDEBCONF')
-        saved_environ = {}
-        for key in saved_environ_keys:
-            if key in os.environ:
-                saved_environ[key] = os.environ[key]
-        os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
-        if 'DEBIAN_HAS_FRONTEND' in os.environ:
-            del os.environ['DEBIAN_HAS_FRONTEND']
-        if 'DEBCONF_USE_CDEBCONF' in os.environ:
-            # Probably not a good idea to use this in /target too ...
-            del os.environ['DEBCONF_USE_CDEBCONF']
-
-        res = pm.RESULT_FAILED
-        try:
-            res = pm.do_install(self.write_stream.fileno())
-        finally:
-            # Reap the status-to-debconf subprocess.
-            self.write_stream.close()
-            os.write(control_write, b'\1')
-            os.close(control_write)
-            while True:
-                try:
-                    (pid, status) = os.waitpid(child_pid, 0)
-                    if pid != child_pid:
-                        break
-                    if os.WIFEXITED(status) or os.WIFSIGNALED(status):
-                        break
-                except OSError:
-                    break
-
-            # Put back stdin and stdout.
-            os.dup2(saved_stdin, 0)
-            os.close(saved_stdin)
-            os.dup2(saved_stdout, 1)
-            os.close(saved_stdout)
-
-            # Put back the environment.
-            for key in saved_environ_keys:
-                if key in saved_environ:
-                    os.environ[key] = saved_environ[key]
-                elif key in os.environ:
-                    del os.environ[key]
-
-        return res
-
-    def finish_update(self):
-        if self.started:
-            if os.environ['UBIQUITY_FRONTEND'] != 'debconf_ui':
-                self.db.progress('STOP')
-            self.started = False
+# class DebconfAcquireProgress(AcquireProgress):
+#     """An object that reports apt's fetching progress using debconf."""
+#
+#     def __init__(self, db, title, info_starting, info):
+#         AcquireProgress.__init__(self)
+#         self.db = db
+#         self.title = title
+#         self.info_starting = info_starting
+#         self.info = info
+#         self.old_capb = None
+#         self.eta = 0.0
+#
+#     def start(self):
+#         if os.environ['UBIQUITY_FRONTEND'] != 'debconf_ui':
+#             self.db.progress('START', 0, 100, self.title)
+#         if self.info_starting is not None:
+#             self.db.progress('INFO', self.info_starting)
+#         self.old_capb = self.db.capb()
+#         capb_list = self.old_capb.split()
+#         capb_list.append('progresscancel')
+#         self.db.capb(' '.join(capb_list))
+#
+#     # TODO cjwatson 2006-02-27: implement updateStatus
+#
+#     def pulse(self, owner=None):
+#         AcquireProgress.pulse(self, owner)
+#         self.percent = (((self.current_bytes + self.current_items) * 100.0) /
+#                         float(self.total_bytes + self.total_items))
+#         if self.current_cps > 0:
+#             self.eta = ((self.total_bytes - self.current_bytes) /
+#                         float(self.current_cps))
+#
+#         try:
+#             if os.environ['UBIQUITY_FRONTEND'] != 'debconf_ui':
+#                 self.db.progress('SET', int(self.percent))
+#         except debconf.DebconfError:
+#             return False
+#         if self.eta != 0.0:
+#             time_str = "%d:%02d" % divmod(int(self.eta), 60)
+#             self.db.subst(self.info, 'TIME', time_str)
+#             try:
+#                 self.db.progress('INFO', self.info)
+#             except debconf.DebconfError:
+#                 return False
+#         return True
+#
+#     def stop(self):
+#         if self.old_capb is not None:
+#             self.db.capb(self.old_capb)
+#             self.old_capb = None
+#             if os.environ['UBIQUITY_FRONTEND'] != 'debconf_ui':
+#                 self.db.progress('STOP')
+#
+#
+# class DebconfInstallProgress(InstallProgress):
+#     """An object that reports apt's installation progress using debconf."""
+#
+#     def __init__(self, db, title, info, error=None):
+#         InstallProgress.__init__(self)
+#         self.db = db
+#         self.title = title
+#         self.info = info
+#         self.error_template = error
+#         self.started = False
+#         # InstallProgress uses a non-blocking status fd; our run()
+#         # implementation doesn't need that, and in fact we spin unless the
+#         # fd is blocking.
+#         flags = fcntl.fcntl(self.status_stream.fileno(), fcntl.F_GETFL)
+#         fcntl.fcntl(self.status_stream.fileno(), fcntl.F_SETFL,
+#                     flags & ~os.O_NONBLOCK)
+#
+#     def start_update(self):
+#         if os.environ['UBIQUITY_FRONTEND'] != 'debconf_ui':
+#             self.db.progress('START', 0, 100, self.title)
+#         self.started = True
+#
+#     def error(self, pkg, errormsg):
+#         if self.error_template is not None:
+#             self.db.subst(self.error_template, 'PACKAGE', pkg)
+#             self.db.subst(self.error_template, 'MESSAGE', errormsg)
+#             self.db.input('critical', self.error_template)
+#             self.db.go()
+#
+#     def status_change(self, dummypkg, percent, status):
+#         self.percent = percent
+#         self.status = status
+#         if os.environ['UBIQUITY_FRONTEND'] != 'debconf_ui':
+#             self.db.progress('SET', int(percent))
+#         self.db.subst(self.info, 'DESCRIPTION', status)
+#         self.db.progress('INFO', self.info)
+#
+#     def run(self, pm):
+#         # Create a subprocess to deal with turning apt status messages into
+#         # debconf protocol messages.
+#         control_read, control_write = os.pipe()
+#         child_pid = self.fork()
+#         if child_pid == 0:
+#             # child
+#             self.write_stream.close()
+#             os.close(control_write)
+#             try:
+#                 while True:
+#                     try:
+#                         rlist, _, _ = select.select(
+#                             [self.status_stream, control_read], [], [])
+#                     except select.error as error:
+#                         if error[0] != errno.EINTR:
+#                             raise
+#                     if self.status_stream in rlist:
+#                         self.update_interface()
+#                     if control_read in rlist:
+#                         os._exit(0)
+#             except (KeyboardInterrupt, SystemExit):
+#                 pass  # we're going to exit anyway
+#             except Exception:
+#                 for line in traceback.format_exc().split('\n'):
+#                     syslog.syslog(syslog.LOG_WARNING, line)
+#             os._exit(0)
+#
+#         self.status_stream.close()
+#         os.close(control_read)
+#
+#         # Redirect stdin from /dev/null and stdout to stderr to avoid them
+#         # interfering with our debconf protocol stream.
+#         saved_stdin = os.dup(0)
+#         try:
+#             null = os.open('/dev/null', os.O_RDONLY)
+#             os.dup2(null, 0)
+#             os.close(null)
+#         except OSError:
+#             pass
+#         saved_stdout = os.dup(1)
+#         os.dup2(2, 1)
+#
+#         # Make sure all packages are installed non-interactively. We
+#         # don't have enough passthrough magic here to deal with any
+#         # debconf questions they might ask.
+#         saved_environ_keys = ('DEBIAN_FRONTEND', 'DEBIAN_HAS_FRONTEND',
+#                               'DEBCONF_USE_CDEBCONF')
+#         saved_environ = {}
+#         for key in saved_environ_keys:
+#             if key in os.environ:
+#                 saved_environ[key] = os.environ[key]
+#         os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
+#         if 'DEBIAN_HAS_FRONTEND' in os.environ:
+#             del os.environ['DEBIAN_HAS_FRONTEND']
+#         if 'DEBCONF_USE_CDEBCONF' in os.environ:
+#             # Probably not a good idea to use this in /target too ...
+#             del os.environ['DEBCONF_USE_CDEBCONF']
+#
+#         res = pm.RESULT_FAILED
+#         try:
+#             res = pm.do_install(self.write_stream.fileno())
+#         finally:
+#             # Reap the status-to-debconf subprocess.
+#             self.write_stream.close()
+#             os.write(control_write, b'\1')
+#             os.close(control_write)
+#             while True:
+#                 try:
+#                     (pid, status) = os.waitpid(child_pid, 0)
+#                     if pid != child_pid:
+#                         break
+#                     if os.WIFEXITED(status) or os.WIFSIGNALED(status):
+#                         break
+#                 except OSError:
+#                     break
+#
+#             # Put back stdin and stdout.
+#             os.dup2(saved_stdin, 0)
+#             os.close(saved_stdin)
+#             os.dup2(saved_stdout, 1)
+#             os.close(saved_stdout)
+#
+#             # Put back the environment.
+#             for key in saved_environ_keys:
+#                 if key in saved_environ:
+#                     os.environ[key] = saved_environ[key]
+#                 elif key in os.environ:
+#                     del os.environ[key]
+#
+#         return res
+#
+#     def finish_update(self):
+#         if self.started:
+#             if os.environ['UBIQUITY_FRONTEND'] != 'debconf_ui':
+#                 self.db.progress('STOP')
+#             self.started = False
 
 
 class InstallStepError(Exception):

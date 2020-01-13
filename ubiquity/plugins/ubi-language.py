@@ -479,21 +479,22 @@ class PageKde(PageBase):
         self.controller.dbfilter.ok_handler()
 
     def on_release_notes_link(self, link):
-        lang = self.selected_language()
-        if link == "release-notes":
-            if lang:
-                lang = lang.split('.')[0].lower()
-                url = self.release_notes_url.replace('${LANG}', lang)
-                self.openURL(url)
-        elif link == "update":
-            if self.updating_installer:
-                return
-            self.updating_installer = True
-            if not auto_update.update(self.controller._wizard):
-                # no updates, so don't check again
-                text = i18n.get_string('release_notes_only', lang)
-                self.page.release_notes_label.setText(text)
-            self.updating_installer = False
+        print("WIP")
+        # lang = self.selected_language()
+        # if link == "release-notes":
+        #     if lang:
+        #         lang = lang.split('.')[0].lower()
+        #         url = self.release_notes_url.replace('${LANG}', lang)
+        #         self.openURL(url)
+        # elif link == "update":
+        #     if self.updating_installer:
+        #         return
+        #     self.updating_installer = True
+        #     if not auto_update.update(self.controller._wizard):
+        #         # no updates, so don't check again
+        #         text = i18n.get_string('release_notes_only', lang)
+        #         self.page.release_notes_label.setText(text)
+        #     self.updating_installer = False
 
     def openURL(self, url):
         from PyQt5.QtGui import QDesktopServices
