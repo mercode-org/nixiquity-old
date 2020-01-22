@@ -1,4 +1,5 @@
 { stdenv
+, fetchurl
 , autoreconfHook
 , gettext
 , pkgconfig
@@ -11,10 +12,9 @@ stdenv.mkDerivation rec {
   pname = "libdebian-installer";
   version = "0.120";
 
-  src = builtins.fetchTarball {
+  src = fetchurl {
     url = "https://deb.debian.org/debian/pool/main/libd/libdebian-installer/libdebian-installer_${version}.tar.xz";
-    # with --unpack
-    sha256 = "1yz4ly89mhrg7jzpr9slbzi633gwj35dy5f4qswps6jr6p9hja1k";
+    sha256 = "1d4kfyw40i05fp118m8p657k7zj2xfncwj2vhb20g85wz1728sj2";
   };
 
   nativeBuildInputs = [

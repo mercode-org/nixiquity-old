@@ -1,4 +1,5 @@
 { stdenv
+, fetchurl
 , libdebian-installer
 }:
 
@@ -6,10 +7,9 @@ stdenv.mkDerivation rec {
   pname = "debian-installer-utils";
   version = "1.133";
 
-  src = builtins.fetchTarball {
+  src = fetchurl {
     url = "https://deb.debian.org/debian/pool/main/d/debian-installer-utils/debian-installer-utils_${version}.tar.xz";
-    # with --unpack
-    sha256 = "0ycwh8akhaaq0vxdhygqlzfa55kdq24agyxisv2xz59irsl21585";
+    sha256 = "160wzjk8dmm7k790ly4z7hz6p43l7qh23yp0c49mhap7rysy3m6m";
   };
 
   buildInputs = [
