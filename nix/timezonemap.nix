@@ -50,4 +50,8 @@ stdenv.mkDerivation rec {
         --replace /usr/bin/file ${file}/bin/file
     done
   '';
+
+  postPatch = ''
+    sed "s|/usr/share/libtimezonemap|$out/share/libtimezonemap|g" -i ./src/tz.h
+  '';
 }

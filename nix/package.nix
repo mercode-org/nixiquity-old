@@ -35,6 +35,7 @@
 , vte
 , busybox
 , debian-installer-utils
+, laptop-detect
 
 , frontendGtk ? true
 , frontendKde ? false
@@ -142,7 +143,7 @@ stdenv.mkDerivation {
       wrapGApp $b
       wrapProgram $b \
         --prefix PYTHONPATH : "${debconf}/lib/python3/dist-packages" \
-        --prefix PATH : "${debian-installer-utils}/bin"
+        --prefix PATH : "${debian-installer-utils}/bin:${laptop-detect}/bin"
     done
   '';
 

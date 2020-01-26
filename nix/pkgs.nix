@@ -8,6 +8,7 @@ rec {
   debconf = callPackage ./debconf.nix { };
   console-setup-linux = callPackage ./console-setup-linux.nix { };
   python-pam = python3Packages.callPackage ./python-pam.nix { };
+  laptop-detect = python3Packages.callPackage ./laptop-detect/default.nix { };
   timezonemap = callPackage ./timezonemap.nix {
     inherit gtk3;
   };
@@ -22,6 +23,6 @@ rec {
     inherit libido gtk3;
   };
   nixiquity = callPackage ./package.nix {
-    inherit libindicator console-setup-linux debconf python-pam timezonemap debian-installer-utils gtk3;
+    inherit libindicator console-setup-linux debconf python-pam timezonemap debian-installer-utils laptop-detect gtk3;
   };
 }
